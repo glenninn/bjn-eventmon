@@ -12,7 +12,7 @@
 1. Download the files from this git repository
 2. give the command `npm install`
 
-### To run
+### To Run
 The application is contained in the eventmon.js file.  It requires one parameter when launching:  the numeric ID of the BlueJeans meeting
 
-`npm eventmon numeric_id`
+`node eventmon numeric_id`
