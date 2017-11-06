@@ -12,6 +12,8 @@ This Node JS application demonstrates how to employ the BlueJeans' Events SDK to
 
 The meeting you wish to monitor must be scheduled without requiring an attendee passcode.  The application connects using a meeting access token obtained on behalf the organizer's id.
 
+![Sample Output](./media/screenshot.png)
+
 
 ### To Install
 1. Download the files from this git repository
