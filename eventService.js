@@ -140,7 +140,7 @@ function eventService(_, my, sockjs)
 				} catch(e) {
 					self.errMsg("Parsing error");
 				}
-              //  try
+                try
                 {
                     if ((msg.length == 2) && (typeof msg[1] === 'object'))
                     {
@@ -190,12 +190,12 @@ function eventService(_, my, sockjs)
                         self.errMsg("JSON Received but not valid event: " + (msg[0] || ""));
                     }
                 }
-               /* catch (e)
+                catch (e)
                 {
                     // console.log("ERROR: " + e)
                     //invalid json, discarding
-                    errMsg("Error: Invalid JSON from SockJS - " + JSON.stringify(e));
-                }*/
+                    self.errMsg("Error: Invalid JSON from SockJS - " + JSON.stringify(e));
+                }
             };
 
             sock.onclose = function()

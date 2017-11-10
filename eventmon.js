@@ -54,7 +54,10 @@ var conFgWhite = "\x1b[37m";
 var conTitle = "\x1b[37;44m";
 var conEraEOP= "\x1b[J";
 
-
+function showTitle(){
+    conGoto(titleRow,1,conTitle+"Events Monitor for meeting: "+ meeting_id + " (" + party.length+" part" +
+	         (party.length < 2 ? "y)" : "ies)")+conReset);
+}
 
 function errMsg(msg){
 	conGoto(errRow,1,msg);
@@ -62,6 +65,7 @@ function errMsg(msg){
 
 function statusMsg(msg){
 	conGoto(statRow,1,msg);
+	showTitle();
 };
 
 function conGoto(x,y,msg){
@@ -87,6 +91,8 @@ var p;
 
 function showParty(p){
 	var E1 = party[p].E1;
+	if(p>19)
+		return;
 	showField(E1,colName,party[p].n);
 	showField(E1,colCnct, party[p].c  == "Join" ? party[p].c : conFgWhite+"Left"+conReset);
 	showField(E1,colVmute,party[p].V2 == "1" ? conReverse+"Muted"+conReset: "Video");
@@ -336,7 +342,7 @@ auth.post( uri, authPath,oauthRec).then(function(results){
 		myMeetingEvents.registerHandler(handler, 'meeting.register.error');   
 		myMeetingEvents.registerHandler(handler, 'meeting.notification');   
 	}
-    conGoto(titleRow,1,conReset+"Events Monitor for meeting: "+ meeting_id);
+	showTitle();
 
 },function(errors){
 	console.log("Error!: " + errors);
