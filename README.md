@@ -24,3 +24,15 @@ The application is contained in the eventmon.js file.  It requires one parameter
 
 
 `node eventmon numeric_id`
+
+### In-Application Commands
+When `eventmon` is running, the following keys are enabled:
+
+
+| Keystroke | Command                                  |
+| --------- | ---------------------------------------- |
+| page down | scroll list to next set of 20 participants |
+| page up   | scroll list to previous set of 20 participants |
+| Ctrl-C    | Quit application                         |
+
+
