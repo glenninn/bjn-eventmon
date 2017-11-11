@@ -21,7 +21,7 @@ var my = require('myclass');
 var sockjs = require('sockjs-client');
 
 var evtModule = require('./eventService');
-
+var readline = require('readline');
 
 
 // --------------------------------------------------------------
@@ -30,17 +30,18 @@ var evtModule = require('./eventService');
 // --------------------------------------------------------------
 var roster_names = {};
 var party = [];
-
+var pgNum = 0;
+var npp = 20;
 
 var titleRow= 22;
 var statRow = titleRow + 1;
 var errRow = titleRow+2;
 
-var colName = 1;
+var colNum  = 1;
+var colName = 3;
 var colCnct = 30;
 var colVmute = 40;
 var colAmute = 50;
-
 
 var conReset = "\x1b[0m";
 var conBright = "\x1b[1m";
@@ -53,6 +54,8 @@ var conBgYellow = "\x1b[43m";
 var conFgWhite = "\x1b[37m";
 var conTitle = "\x1b[37;44m";
 var conEraEOP= "\x1b[J";
+var conEraEOL = "\x1b[K";
+
 
 function showTitle(){
     conGoto(titleRow,1,conTitle+"Events Monitor for meeting: "+ meeting_id + " (" + party.length+" part" +
@@ -60,7 +63,7 @@ function showTitle(){
 }
 
 function errMsg(msg){
-	conGoto(errRow,1,msg);
+	conGoto(errRow,1,msg+conEraEOL);
 }
 
 function statusMsg(msg){
@@ -72,17 +75,27 @@ function conGoto(x,y,msg){
 	console.log("\x1b["+x+";"+y+"H" + msg );
 }
 
+
 function conClrScrn(){
 	conGoto(1,1,conEraEOP);
+	conGoto(1,colNum,conTitle+"# ");
 	conGoto(1,colName,conTitle+"Participant");
 	conGoto(1,colCnct,conTitle+"Meeting");
 	conGoto(1,colVmute,conTitle+"Video");
 	conGoto(1,colAmute,conTitle+"Audio"+conReset);
 }
 
+function pageBounds(){
+	var pSt = pgNum*npp;
+    var pEnd = pSt + npp; if (pEnd > party.length) pEnd = party.length;
+	return { pSt : pSt, pEnd:pEnd };
+}
+
 function showField(E1,col,msg){
 var p;
-	for(p=0; p<party.length; p++){
+var pb = pageBounds();
+
+	for(p=pb.pSt; p<pb.pEnd; p++){
 		if(party[p].E1 == E1){
 			conGoto(p+2,col,msg);
 		}
@@ -91,12 +104,24 @@ var p;
 
 function showParty(p){
 	var E1 = party[p].E1;
-	if(p>19)
-		return;
+	showField(E1,colNum, pgNum*npp + p);
 	showField(E1,colName,party[p].n);
 	showField(E1,colCnct, party[p].c  == "Join" ? party[p].c : conFgWhite+"Left"+conReset);
 	showField(E1,colVmute,party[p].V2 == "1" ? conReverse+"Muted"+conReset: "Video");
 	showField(E1,colAmute,party[p].A2 == "1" ? conReverse+"Muted"+conReset: "Audio");
+}
+
+
+
+function showCurPage(){
+	var p;
+	var pb = pageBounds();
+	for(p=0; p<npp; p++){
+		conGoto(p+2,1,conEraEOL);
+	}
+	for(p=pb.pSt; p<pb.pEnd; p++){
+		showParty(p);
+	}
 }
 
 
@@ -343,8 +368,38 @@ auth.post( uri, authPath,oauthRec).then(function(results){
 		myMeetingEvents.registerHandler(handler, 'meeting.notification');   
 	}
 	showTitle();
-
+	kp();
 },function(errors){
 	console.log("Error!: " + errors);
 	process.exit();
 });
+
+function kp() {
+	readline.emitKeypressEvents(process.stdin);
+	process.stdin.setRawMode(true);	
+	process.stdin.on('keypress', function (chunk, key) {
+		switch(key.name)
+		{
+			case 'c':
+				if (key.ctrl) {
+					process.exit();
+				}
+				break;
+			case 'pagedown':
+			    pgNum ++;
+				errMsg("pgNum = " + pgNum);
+				showCurPage();
+				break;
+		    case 'pageup':
+			    pgNum--;
+				if(pgNum < 0) pgNum = 0;
+				errMsg("pgNum = " + pgNum);
+				showCurPage();
+				break;
+			default:
+				errMsg("Unknown Key: " + JSON.stringify(key));
+		}
+	});
+}
+
+	
