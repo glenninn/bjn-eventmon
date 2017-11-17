@@ -97,14 +97,14 @@ var pb = pageBounds();
 
 	for(p=pb.pSt; p<pb.pEnd; p++){
 		if(party[p].E1 == E1){
-			conGoto(p+2,col,msg);
+			conGoto(p+2-pb.pSt,col,msg);
 		}
 	}
 }
 
 function showParty(p){
 	var E1 = party[p].E1;
-	showField(E1,colNum, pgNum*npp + p);
+	showField(E1,colNum, p);
 	showField(E1,colName,party[p].n);
 	showField(E1,colCnct, party[p].c  == "Join" ? party[p].c : conFgWhite+"Left"+conReset);
 	showField(E1,colVmute,party[p].V2 == "1" ? conReverse+"Muted"+conReset: "Video");
