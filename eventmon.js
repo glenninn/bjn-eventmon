@@ -30,6 +30,7 @@ var readline = require('readline');
 // --------------------------------------------------------------
 var roster_names = {};
 var party = [];
+var pKeys = [];
 var pgNum = 0;
 var npp = 20;
 
@@ -38,10 +39,11 @@ var statRow = titleRow + 1;
 var errRow = titleRow+2;
 
 var colNum  = 1;
-var colName = 3;
+var colName = 4;
 var colCnct = 30;
 var colVmute = 40;
 var colAmute = 50;
+var colCQ  = 57;
 
 var conReset = "\x1b[0m";
 var conBright = "\x1b[1m";
@@ -58,8 +60,8 @@ var conEraEOL = "\x1b[K";
 
 
 function showTitle(){
-    conGoto(titleRow,1,conTitle+"Events Monitor for meeting: "+ meeting_id + " (" + party.length+" part" +
-	         (party.length < 2 ? "y)" : "ies)")+conReset);
+    conGoto(titleRow,1,conTitle+"Events Monitor for meeting: "+ meeting_id + " (" + pKeys.length+" part" +
+	         (pKeys.length < 2 ? "y)" : "ies)")+conReset);
 }
 
 function errMsg(msg){
@@ -82,33 +84,53 @@ function conClrScrn(){
 	conGoto(1,colName,conTitle+"Participant");
 	conGoto(1,colCnct,conTitle+"Meeting");
 	conGoto(1,colVmute,conTitle+"Video");
-	conGoto(1,colAmute,conTitle+"Audio"+conReset);
+	conGoto(1,colAmute,conTitle+"Audio");
+	conGoto(1,colCQ,conTitle+"Qual."+conReset);
 }
 
 function pageBounds(){
 	var pSt = pgNum*npp;
-    var pEnd = pSt + npp; if (pEnd > party.length) pEnd = party.length;
+    var pEnd = pSt + npp; 
+	var pLen = Object.keys(party).length;
+	if (pEnd > pLen) pEnd = pLen;
 	return { pSt : pSt, pEnd:pEnd };
 }
 
-function showField(E1,col,msg){
-var p;
-var pb = pageBounds();
 
-	for(p=pb.pSt; p<pb.pEnd; p++){
-		if(party[p].E1 == E1){
-			conGoto(p+2,col,msg);
-		}
+function showParty(E1){
+	var pb = pageBounds();
+
+	function showField(col,msg){
+		conGoto(L+2,col,msg);
 	}
-}
-
-function showParty(p){
-	var E1 = party[p].E1;
-	showField(E1,colNum, pgNum*npp + p);
-	showField(E1,colName,party[p].n);
-	showField(E1,colCnct, party[p].c  == "Join" ? party[p].c : conFgWhite+"Left"+conReset);
-	showField(E1,colVmute,party[p].V2 == "1" ? conReverse+"Muted"+conReset: "Video");
-	showField(E1,colAmute,party[p].A2 == "1" ? conReverse+"Muted"+conReset: "Audio");
+	
+	function showQuality(qs){
+		var q = Number(qs);
+		var qExpr = conEraEOL;
+		if(q>=4){
+			qExpr = "\x1b[42m\x1b[30m  " + q + conReset;
+		} else if (q>=2){
+			qExpr = "\x1b[43m\x1b[30m " + q + conReset + " ";
+		} else {
+			qExpr = "\x1b[41m\x1b[47m" + q + conReset + "  ";
+		}
+		return qExpr;		
+	}
+	
+	var L = pKeys.findIndex( (cur,idx) =>{ return (E1 == cur)});
+	
+	if( L < pb.pSt )
+		return;
+	if( L >= pb.pEnd)
+		return;
+	
+	L = L-pb.pSt;	
+	showField(colNum, pgNum*npp + L);
+	showField(colName,party[E1].n);
+	showField(colCnct, party[E1].c  == "Join" ? party[E1].c : conFgWhite+"Left"+conReset);
+	showField(colVmute,party[E1].V2 == "1" ? conReverse+"Muted"+conReset: "Video");
+	showField(colAmute,party[E1].A2 == "1" ? conReverse+"Muted"+conReset: "Audio");
+	showField(colCQ, showQuality(party[E1].C1));  // + ", " + Number(party[E1].C1) + "\xa6\xa6\xa6");
 }
 
 
@@ -116,12 +138,23 @@ function showParty(p){
 function showCurPage(){
 	var p;
 	var pb = pageBounds();
+	
 	for(p=0; p<npp; p++){
 		conGoto(p+2,1,conEraEOL);
 	}
 	for(p=pb.pSt; p<pb.pEnd; p++){
-		showParty(p);
+		showParty(pKeys[p]);
 	}
+}
+
+function userJoins(u){
+	party[u.E1] = u;
+	pKeys = Object.keys(party);
+}
+
+function userLeaves(u){
+	delete party[u.E1];
+	pKeys = Object.keys(party);
 }
 
 
@@ -160,15 +193,9 @@ var handler =
                 {
                     eventJson.props.f.forEach(function (item)
                     {
-						var dupe = false;
-						for(var i=0; i<party.length; i++){
-							if(party[i].E1 == item.E1){
-								dupe = true;
-								break;
-							}
-						}
-						if(!dupe){
+						if( !party[item.E1]) {
 							var n = {
+								C1 : item.C1,
 								n  : item.n,
 								E1 : item.E1,
 								A1 : item.A1,
@@ -180,14 +207,12 @@ var handler =
 								T  : item.T,
 								c  : "Join"
 							};
-							party.push(n);
+							userJoins(n);
 							// console.log("PARTICIPANT: {cur st} " + item.n + " via " + item.e + " (" + item.c + ")");
 							roster_names[item.c] = item.n;
 						}
                     });
-					for(var p=0; p<party.length; p++){
-						showParty(p);
-					}
+					showCurPage();
                 }
                 // Add
                 else if (eventJson.props.a)
@@ -196,16 +221,10 @@ var handler =
 					
                     eventJson.props.a.forEach(function (item)
                     {
-						var dupe = false;
-						for(var i=0; i<party.length; i++){
-							if(party[i].E1 == item.E1){
-								dupe = true;
-								break;
-							}
-						}
-						if(!dupe){
+						if( !party[item.E1]) {
 							//console.log("PARTICIPANT: {add}" + item.n + " via " + item.e + " (" + item.c + ")");
 							var n = {
+								C1 : item.C1,
 								n  : item.n,
 								E1 : item.E1,
 								A1 : item.A1,
@@ -217,13 +236,11 @@ var handler =
 								T  : 0,
 								c  : "Join"
 							};
-							party.push(n);
+							userJoins(n);
 							roster_names[item.c] = item.n;
 						}
                     });
-					for(var p=0; p < party.length; p++){
-						showParty(p);
-					}
+					showCurPage();
                 }
                 // Delete?
                 else if (eventJson.props.d)
@@ -231,12 +248,11 @@ var handler =
                     eventJson.props.d.forEach(function (item)
                     {
                         // console.log("LEFT MEETING: " + item.n);
-						for(var p =0; p<party.length; p++){
-							if(party[p].E1 === item.E1){
-								party[p].c = "Left";
-								showParty(p);
-								break;
-							}
+						if(party[item.E1]){
+							party[item.E1].c = "Left";
+							// userLeaves(item);
+							// delete party[item.E1];
+							showParty(item.E1)
 						}
                     });
                 }
@@ -247,13 +263,8 @@ var handler =
                     {
                         if (item.V2)
                         {
-							for(var p=0; p<party.length; p++){
-								if(party[p].E1 == item.E1){
-									party[p].V2 = item.V2;
-									showParty(p);
-									break;
-								}
-							}
+							party[item.E1].V2 = item.V2;
+							showParty(item.E1);
 
                             if (item.V2 == '1')
                             {
@@ -277,13 +288,8 @@ var handler =
 
                         if (item.A2)
                         {
-							for(var p=0; p<party.length; p++){
-								if(party[p].E1 == item.E1){
-									party[p].A2 = item.A2;
-									showParty(p);
-									break;
-								}
-							}
+							party[item.E1].A2 = item.A2;
+							showParty(item.E1);
 
                             if (item.A2 == '1')
                             {
@@ -297,17 +303,15 @@ var handler =
 
                         if (item.C1)
                         {
+							party[item.E1].C1 = item.C1;
+							showParty(item.E1);
                             //console.log("CALL QUALITY CHANGED TO " + item.C1 + " FOR " + roster_names[item.c]);
                         }
 
                         if (item.T)
                         {
-							for(var p=0; p<party.length; p++){
-								if(party[p].E1 == item.E1){
-									party[p].T = item.T;
-									break;
-								}
-							}
+							party[item.E1].T = item.T;
+							showParty(item.E1)
 							
                             if (item.T == '1')
                             {
@@ -382,7 +386,15 @@ function kp() {
 		{
 			case 'c':
 				if (key.ctrl) {
+					conGoto(24,1,conEraEOL + "***done***");
 					process.exit();
+				}
+				break;
+			case 'l':
+				if (key.ctrl) {
+					conClrScrn();
+					showTitle();	
+					showCurPage();
 				}
 				break;
 			case 'pagedown':
