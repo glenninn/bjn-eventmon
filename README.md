@@ -33,6 +33,7 @@ When `eventmon` is running, the following keys are enabled:
 | --------- | ---------------------------------------- |
 | page down | scroll list to next set of 20 participants |
 | page up   | scroll list to previous set of 20 participants |
+| Ctrl-L    | Refresh the screen |
 | Ctrl-C    | Quit application                         |
 
 
