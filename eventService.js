@@ -178,8 +178,9 @@ function eventService(_, my, sockjs)
                                   {
                                       return evt.match("^"+namespace);
                                   });
-
-                                  self.handlers[eventNamespace].onMessage(evt, evt_data);
+								  
+								  if(eventNamespace)
+									  self.handlers[eventNamespace].onMessage(evt, evt_data);
                               }
 
                               break;

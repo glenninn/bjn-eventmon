@@ -4,14 +4,27 @@ var auth = require("./auth.js");
 // ------------ Handle Command Line Interactions ----------------
 if (process.argv.length != 3)
 {
-    console.log('Usage: node eventmon.js <numeric_meeting_id>');
+console.log('Usage: node eventmon.js <numeric_meeting_id | https://bluejeans.com/{numeric_meeting_id}>');
 	console.log("Utility application to monitor events from a BlueJeans meeting");
 	console.log(" Where the command line parameters are:");
 	console.log("    numeric_meeting_id --- the string value you enter when joining from a client");
     process.exit(1);
 }
 var meeting_id = process.argv[2];
+var attendeePasscode = "";
 
+// test for bjn url
+var url = meeting_id.split('/');
+if(url[3]){
+	// extract mtg id
+	meeting_id = url[3];
+}
+// look for passcode
+url = meeting_id.split('.');
+if(url[1]){
+	attendeePasscode = url[1];
+}
+meeting_id = url[0];
 
 
 // --------------------------------------------------------------
@@ -57,6 +70,7 @@ var conFgWhite = "\x1b[37m";
 var conTitle = "\x1b[37;44m";
 var conEraEOP= "\x1b[J";
 var conEraEOL = "\x1b[K";
+var conClrPage = "\x1bc";
 
 
 function showTitle(){
@@ -79,7 +93,8 @@ function conGoto(x,y,msg){
 
 
 function conClrScrn(){
-	conGoto(1,1,conEraEOP);
+//	conGoto(1,1,conEraEOP);
+	console.log(conClrPage);
 	conGoto(1,colNum,conTitle+"# ");
 	conGoto(1,colName,conTitle+"Participant");
 	conGoto(1,colCnct,conTitle+"Meeting");
@@ -108,9 +123,9 @@ function showParty(E1){
 		var q = Number(qs);
 		var qExpr = conEraEOL;
 		if(q>=4){
-			qExpr = "\x1b[42m\x1b[30m  " + q + conReset;
+			qExpr = "\x1b[42m\x1b[37m  " + q + conReset;
 		} else if (q>=2){
-			qExpr = "\x1b[43m\x1b[30m " + q + conReset + " ";
+			qExpr = "\x1b[43m\x1b[37m " + q + conReset + " ";
 		} else {
 			qExpr = "\x1b[41m\x1b[47m" + q + conReset + "  ";
 		}
@@ -332,7 +347,7 @@ var handler =
 var oauthRec = {
 	 grant_type :"meeting_passcode",
 	 meetingNumericId : meeting_id,
-	 meetingPasscode : ""
+	 meetingPasscode : attendeePasscode
 };
 var uri = "api.bluejeans.com";
 var authPath = "/oauth2/token?meeting_passcode";
@@ -374,7 +389,8 @@ auth.post( uri, authPath,oauthRec).then(function(results){
 	showTitle();
 	kp();
 },function(errors){
-	console.log("Error!: " + errors);
+	var emsg = errors.replace(/\n/g,"\n  ");
+	console.log("Error when accessing meeting:\n  " + emsg);
 	process.exit();
 });
 
