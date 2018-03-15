@@ -19,12 +19,17 @@ if(url[3]){
 	// extract mtg id
 	meeting_id = url[3];
 }
+
+// get rid of an Query params after '?'
+url = meeting_id.split('?');
+meeting_id = url[0];
+
 // look for passcode
 url = meeting_id.split('.');
 if(url[1]){
 	attendeePasscode = url[1];
+	meeting_id=url[0];
 }
-meeting_id = url[0];
 
 
 // --------------------------------------------------------------
