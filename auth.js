@@ -14,7 +14,8 @@ var post = function(host,path,body){
 	var postPromise = new Promise(function(resolve,reject){
 		var postContent = JSON.stringify(body);
 		if( (authToken != "") ){
-			path += "?access_token=" + authToken;
+			path += (path.indexOf("?">0)) ? "&" : "?";
+			path += "access_token=" + authToken;
 		}
 		
 		var opt = {
@@ -55,7 +56,8 @@ var post = function(host,path,body){
 var get = function(host,path){
 	var getPromise = new Promise(function(resolve,reject){
 		if( (authToken != "") ){
-			path += "?access_token=" + authToken;
+			path += (path.indexOf("?">0)) ? "&" : "?";
+			path += "access_token=" + authToken;
 		}
 
 		var opt = {
