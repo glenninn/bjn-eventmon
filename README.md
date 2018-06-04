@@ -6,6 +6,7 @@
 
 ## Reference Design for Monitoring BlueJeans Meeting Events
 
+- 6/04/2018, g1, Update documentation about providing of a meeting passcode
 - 11/6/2017, g1, Initial check-in
 - 3/9/2018, g1, Add support for URL parsing
 
@@ -21,11 +22,14 @@ The meeting you wish to monitor must be scheduled without requiring an attendee 
 2. give the command `npm install`
 
 ### To Run
-The application is contained in the eventmon.js file.  It requires one parameter when launching:  the numeric ID of the BlueJeans meeting
+The application is contained in the eventmon.js file.  It requires the BlueJeans numeric meeting ID as a parameter when launching:  
 
+`node eventmon numeric_id`   or 
+`node eventmon numeric_id.passcode`
+`node eventmon https://bluejeans.com/numeric_id`  or 
+`node eventmon https://bluejeans.com/numeric_id.passcode`
 
-`node eventmon numeric_id`   or   
-`node eventmon https://bluejeans.com/numeric_id`
+If the Meeting has assigned an *optional passcode*, you must provide that value.  If you are a moderator, you may substitute at any time the moderator code for the passcode value.
 
 
 ### In-Application Commands

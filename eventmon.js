@@ -4,10 +4,12 @@ var auth = require("./auth.js");
 // ------------ Handle Command Line Interactions ----------------
 if (process.argv.length != 3)
 {
-console.log('Usage: node eventmon.js <numeric_meeting_id | https://bluejeans.com/{numeric_meeting_id}>');
+console.log('Usage: node eventmon.js <numeric_meeting_id | numeric_meeting_id.passcode | ' +
+			' https://bluejeans.com/{numeric_meeting_id} | https://bluejeans.com/{numeric_meeting_id.passcode}>');
 	console.log("Utility application to monitor events from a BlueJeans meeting");
 	console.log(" Where the command line parameters are:");
 	console.log("    numeric_meeting_id --- the string value you enter when joining from a client");
+	console.log("    passcode           --- the passcode (if assigned) or moderator code assigned to the meeting");
     process.exit(1);
 }
 var meeting_id = process.argv[2];
