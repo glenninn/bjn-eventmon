@@ -362,11 +362,9 @@ var authPath = "/oauth2/token?meeting_passcode";
 auth.post( uri, authPath,oauthRec).then(function(results){
 	conClrScrn();
 	var access_token = results.access_token;
-	var fields = results.scope.meeting.meetingUri.split("/");
-	var partition = results.scope.partitionName;
-	var user_id = fields[3];
-	// console.log("Owner, mtg Id, token: " + user_id + ", " + meeting_id + ", " + access_token);
-	// process.exit();
+	var fields       = results.scope.meeting.meetingUri.split("/");
+	var partition    = results.scope.partitionName;
+	var user_id      = fields[3];
 
 	// --------------------------------------------------------------
 	// 				Instantiation of My Event Handler
