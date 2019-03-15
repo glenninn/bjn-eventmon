@@ -1,4 +1,5 @@
 var auth = require("./auth.js");
+const version = "1.1.0";
 
 // --------------------------------------------------------------
 // ------------ Handle Command Line Interactions ----------------
@@ -6,7 +7,7 @@ if (process.argv.length != 3)
 {
 console.log('Usage: node eventmon.js <numeric_meeting_id | numeric_meeting_id.passcode | ' +
 			' https://bluejeans.com/{numeric_meeting_id} | https://bluejeans.com/{numeric_meeting_id.passcode}>');
-	console.log("Utility application to monitor events from a BlueJeans meeting");
+	console.log("Utility application to monitor events from a BlueJeans meeting. (Version: " + version+")");
 	console.log(" Where the command line parameters are:");
 	console.log("    numeric_meeting_id --- the string value you enter when joining from a client");
 	console.log("    passcode           --- the passcode (if assigned) or moderator code assigned to the meeting");
@@ -81,7 +82,7 @@ var conClrPage = "\x1bc";
 
 
 function showTitle(){
-    conGoto(titleRow,1,conTitle+"Events Monitor for meeting: "+ meeting_id + " (" + pKeys.length+" part" +
+    conGoto(titleRow,1,conTitle+"Events Monitor (v"+ version + ") for meeting: "+ meeting_id + " (" + pKeys.length+" part" +
 	         (pKeys.length < 2 ? "y)" : "ies)")+conReset);
 }
 
@@ -351,20 +352,25 @@ var handler =
     }
 };
 
-var oauthRec = {
-	 grant_type :"meeting_passcode",
-	 meetingNumericId : meeting_id,
-	 meetingPasscode : attendeePasscode
-};
-var uri = "api.bluejeans.com";
-var authPath = "/oauth2/token?meeting_passcode";
 
-auth.post( uri, authPath,oauthRec).then(function(results){
+//
+// Update to use the BlueJeans aggregator API call
+//
+var apiHost = "api.bluejeans.com";
+var aggregator = "/v1/services/aggregator/meeting?pairing=none&allowGeoLocation=true";
+var arec = {
+   attributes: [],
+   meetingNumericId : meeting_id,
+   meetingPasscode : attendeePasscode
+};
+
+
+auth.post( apiHost, aggregator,arec).then(function(results){
 	conClrScrn();
-	var access_token = results.access_token;
-	var fields       = results.scope.meeting.meetingUri.split("/");
-	var partition    = results.scope.partitionName;
-	var user_id      = fields[3];
+	
+	var access_token = results.oauthInfo.access_token;
+	var user_id      = results.oauthInfo.scope.meeting.leaderId;
+	var eventsUrl    = results.meetingInfo.eventServiceURL;
 
 	// --------------------------------------------------------------
 	// 				Instantiation of My Event Handler
@@ -383,9 +389,9 @@ auth.post( uri, authPath,oauthRec).then(function(results){
 			'leader_id': user_id,
 			'protocol': '2',
 			'endpointType': 'commandCenter',
-			'eventServiceUrl': 'https://bluejeans.com/' + partition + '/evt/v1/' + meeting_id
+			'eventServiceUrl': eventsUrl
 		};
-
+		
 		myMeetingEvents.setUpSocket(opts);
 		myMeetingEvents.setStatusCallbacks(statusMsg,errMsg);
 		myMeetingEvents.registerHandler(handler, 'meeting.register.error');   

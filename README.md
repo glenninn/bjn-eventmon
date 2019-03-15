@@ -6,6 +6,7 @@
 
 ## Reference Design for Monitoring BlueJeans Meeting Events
 
+- 3/15/2019, g1, Update code to use BlueJeans aggregation API, Add versioning.
 - 6/04/2018, g1, Update documentation about providing of a meeting passcode
 - 11/6/2017, g1, Initial check-in
 - 3/9/2018, g1, Add support for URL parsing
