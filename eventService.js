@@ -258,8 +258,8 @@ function eventService(_, my, sockjs)
 
         reconnect: function()
         {
-            self.errMsg("Reconnect!")
             var self = this;
+            self.errMsg("Reconnect!")
             this.connected = false;
             if (self.sock._remoteclosed) return;
             if (self.sock._kicked) return;
