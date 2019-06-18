@@ -209,13 +209,19 @@ var handler =
         }
         else if (eventType.startsWith('statechange.endpoints'))
         {
-            if (eventJson.props)
-            {
-                // Current state
-                if (eventJson.props.f)
-                {
-                    eventJson.props.f.forEach(function (item)
-                    {
+			// Current state
+			// Each Event message will have a property field "props"
+			// that field is an object with 1 or more action properties: "f","a","m","d"
+			// 		Each Action Property is an array of affected participants props: { f:[...], a:[...] } etc
+			//
+			var ops = Object.keys(eventJson.props);
+			
+			ops.forEach( (op,i)=>{
+				// Extract out the property field
+				switch(op) {
+					case "f" :
+					eventJson.props[op].forEach(function (item)
+					{
 						if( !party[item.E1]) {
 							var n = {
 								C1 : item.C1,
@@ -234,16 +240,15 @@ var handler =
 							// console.log("PARTICIPANT: {cur st} " + item.n + " via " + item.e + " (" + item.c + ")");
 							roster_names[item.c] = item.n;
 						}
-                    });
+					});
 					showCurPage();
-                }
-                // Add
-                else if (eventJson.props.a)
-                {
+					break;
+					
+					case "a":
 					var pst = party.length;
 					
-                    eventJson.props.a.forEach(function (item)
-                    {
+					eventJson.props[op].forEach(function (item)
+					{
 						if( !party[item.E1]) {
 							//console.log("PARTICIPANT: {add}" + item.n + " via " + item.e + " (" + item.c + ")");
 							var n = {
@@ -262,94 +267,93 @@ var handler =
 							userJoins(n);
 							roster_names[item.c] = item.n;
 						}
-                    });
+					});
 					showCurPage();
-                }
-                // Delete?
-                else if (eventJson.props.d)
-                {
-                    eventJson.props.d.forEach(function (item)
-                    {
-                        // console.log("LEFT MEETING: " + item.n);
+					break;
+					
+					case "d":
+					eventJson.props[op].forEach(function (item)
+					{
+						// console.log("LEFT MEETING: " + item.n);
 						if(party[item.E1]){
 							party[item.E1].c = "Left";
 							// userLeaves(item);
 							// delete party[item.E1];
 							showParty(item.E1)
 						}
-                    });
-                }
-                // Modify?
-                else if (eventJson.props.m)
-                {
-                    eventJson.props.m.forEach(function (item)
-                    {
-                        if (item.V2)
-                        {
+					});
+					break;
+					
+					case "m":
+					eventJson.props[op].forEach(function (item)
+					{
+						if (item.V2)
+						{
 							party[item.E1].V2 = item.V2;
 							showParty(item.E1);
 
-                            if (item.V2 == '1')
-                            {
-                                //console.log("VIDEO MUTE IS ON FOR " + roster_names[item.c]);
-                            }
-                            else if (item.V2 == '0')
-                            {
-                                //console.log("VIDEO MUTE IS OFF FOR " + roster_names[item.c]);
-                            }
-                        }
+							if (item.V2 == '1')
+							{
+								//console.log("VIDEO MUTE IS ON FOR " + roster_names[item.c]);
+							}
+							else if (item.V2 == '0')
+							{
+								//console.log("VIDEO MUTE IS OFF FOR " + roster_names[item.c]);
+							}
+						}
 
-                        if (item.V8 && item.V9)
-                        {
-                            //console.log("VIDEO SEND SIZE IS " + item.V9 + "x" + item.V8 + " FOR " + roster_names[item.c]);
-                        }
+						if (item.V8 && item.V9)
+						{
+							//console.log("VIDEO SEND SIZE IS " + item.V9 + "x" + item.V8 + " FOR " + roster_names[item.c]);
+						}
 
-                        if (item.V5 && item.V6)
-                        {
-                            //console.log("VIDEO RECV SIZE IS " + item.V6 + "x" + item.V5 + " FOR " + roster_names[item.c]);
-                        }
+						if (item.V5 && item.V6)
+						{
+							//console.log("VIDEO RECV SIZE IS " + item.V6 + "x" + item.V5 + " FOR " + roster_names[item.c]);
+						}
 
-                        if (item.A2)
-                        {
+						if (item.A2)
+						{
 							party[item.E1].A2 = item.A2;
 							showParty(item.E1);
 
-                            if (item.A2 == '1')
-                            {
-                                //console.log("AUDIO MUTE IS ON FOR " + roster_names[item.c]);
-                            }
-                            else if (item.A2 == '0')
-                            {
-                                //console.log("AUDIO MUTE IS OFF FOR " + roster_names[item.c]);
-                            }
-                        }
+							if (item.A2 == '1')
+							{
+								//console.log("AUDIO MUTE IS ON FOR " + roster_names[item.c]);
+							}
+							else if (item.A2 == '0')
+							{
+								//console.log("AUDIO MUTE IS OFF FOR " + roster_names[item.c]);
+							}
+						}
 
-                        if (item.C1)
-                        {
+						if (item.C1)
+						{
 							party[item.E1].C1 = item.C1;
 							showParty(item.E1);
-                            //console.log("CALL QUALITY CHANGED TO " + item.C1 + " FOR " + roster_names[item.c]);
-                        }
+							//console.log("CALL QUALITY CHANGED TO " + item.C1 + " FOR " + roster_names[item.c]);
+						}
 
-                        if (item.T)
-                        {
+						if (item.T)
+						{
 							party[item.E1].T = item.T;
 							showParty(item.E1)
 							
-                            if (item.T == '1')
-                            {
-                                //console.log("TALKING YES FOR " + roster_names[item.c]);
-                            }
-                            else if (item.T == '0')
-                            {
-                                //console.log("TALKING NO FOR " + roster_names[item.c]);
-                            }
-                        }
-                    });
-                }
-            }
-        }
-    }
+							if (item.T == '1')
+							{
+								//console.log("TALKING YES FOR " + roster_names[item.c]);
+							}
+							else if (item.T == '0')
+							{
+								//console.log("TALKING NO FOR " + roster_names[item.c]);
+							}
+						}
+					});
+					break;
+				} // switch
+			}); // forEach JSON prop
+		} // if statechange.endpoints
+    } // onmessage
 };
 
 

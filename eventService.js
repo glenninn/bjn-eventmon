@@ -135,39 +135,44 @@ function eventService(_, my, sockjs)
             sock.onmessage = function(_e)
             {
 				var msg;
+				var evt_data;
+				
 				try{
 					msg = JSON.parse(_e.data);
 				} catch(e) {
 					self.errMsg("Parsing error");
+					return;
 				}
+				
                 try
                 {
                     if ((msg.length == 2) && (typeof msg[1] === 'object'))
                     {
                         var evt = msg[0];
 						var vt100EraEOL = "\x1b[K";
-
 						self.statusMsg(evt+ vt100EraEOL);
                         switch(evt)
                         {
                             case 'keepalive':
                                 self.sendEvent("heartbeat");
                                 break;
+							case "meeting.notification.guid_assigned":
+								break;								
                             default:
-                              var evt_data = msg[1];
+                              evt_data = msg[1];
                               if(evt_data && evt_data.reqId && self.reqCallbacks[evt_data.reqId])
                               {
                                 var cb = self.reqCallbacks[evt_data.reqId];
                                 delete self.reqCallbacks[evt_data.reqId];
                                 cb(evt_data.error,evt_data.data);
                                 break;
-                              }
+                             }
 
                               var protocolEvent = evt.match("([^.]*)$")[0];
 							  
                               if (protocolEvent in self.events())
                               {
-                                  //self.events()[protocolEvent](evt_data);
+								//self.events()[protocolEvent](evt_data);
                                   var c = self.events()[protocolEvent];
                                   c.call(self, evt_data);
                               }
@@ -193,9 +198,9 @@ function eventService(_, my, sockjs)
                 }
                 catch (e)
                 {
-                    // console.log("ERROR: " + e)
                     //invalid json, discarding
-                    self.errMsg("Error: Invalid JSON from SockJS - " + JSON.stringify(e));
+                    self.errMsg(
+					+ "Error: processing event: " + JSON.stringify(evt_data,null,2) );  
                 }
             };
 
