@@ -54,6 +54,7 @@ var party = [];
 var pKeys = [];
 var pgNum = 0;
 var npp = 20;
+var mtgStatus="";
 
 var titleRow= 22;
 var statRow = titleRow + 1;
@@ -74,6 +75,7 @@ var conBlink = "\x1b[5m";
 var conReverse = "\x1b[7m";
 var conHidden = "\x1b[8m";
 var conBgYellow = "\x1b[43m";
+var conMtgFinished = "\x1b[1;31;44m";
 var conFgWhite = "\x1b[37m";
 var conTitle = "\x1b[37;44m";
 var conEraEOP= "\x1b[J";
@@ -83,7 +85,10 @@ var conClrPage = "\x1bc";
 
 function showTitle(){
     conGoto(titleRow,1,conTitle+"Events Monitor (v"+ version + ") for meeting: "+ meeting_id + " (" + pKeys.length+" part" +
-	         (pKeys.length < 2 ? "y)" : "ies)")+conReset);
+	         (pKeys.length < 2 ? "y)" : "ies)")
+		+ " " + mtgStatus
+		+ conReset 
+		+ conEraEOL);
 }
 
 function errMsg(msg){
@@ -201,6 +206,15 @@ var handler =
 
         if (eventType.startsWith('statechange.livemeeting'))
         {
+			var props = eventJson.props;
+
+			if(props.meetingState == "MeetingFinished")
+			 	 mtgStatus = conMtgFinished  + "Meeting Ended";
+			else mtgStatus = props.meetingState;
+			
+			if(props.locked){
+				mtgStatus += " LOCKed";
+			}
 			/*
             console.log('MEETING ' + eventJson.props.meetingId + ": " +  eventJson.props.audioEndpointCount + " on audio and " + eventJson.props.videoEndpointCount + " on video");
             console.log('MEETING ' + eventJson.props.meetingId + ": locked = " + eventJson.props.locked);
