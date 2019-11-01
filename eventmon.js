@@ -208,7 +208,7 @@ var handler =
 
         var self = this;
         var eventJson = JSON.parse(eventData.body);
-		fd.write( JSON.stringify(eventJson,null,2) );
+		if(fd) fd.write( JSON.stringify(eventJson,null,2) );
         var eventType = eventJson.event;
 
         // console.log("+++ HANDLER " + eventType + ": " + JSON.stringify(eventJson));
