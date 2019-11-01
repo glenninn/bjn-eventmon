@@ -6,6 +6,7 @@
 
 ## Reference Design for Monitoring BlueJeans Meeting Events
 
+- 11/1/2019,g1, Add compile option to log JSON event messages to file
 - 6/17/2019,g1, Fix bug with not handling multiple event operations delivered in an one event message
 - 3/15/2019, g1, Update code to use BlueJeans aggregation API, Add versioning.
 - 6/04/2018, g1, Update documentation about providing of a meeting passcode
@@ -44,5 +45,22 @@ When `eventmon` is running, the following keys are enabled:
 | page up   | scroll list to previous set of 20 participants |
 | Ctrl-L    | Refresh the screen |
 | Ctrl-C    | Quit application                         |
+
+
+
+### Capturing Raw JSON Event Messages to File
+
+You can have eventmon write to a file, the raw JSON for each BlueJeans event received.  To do this, you must edit the Javascript code.   At the top of the `evenmon.js` file, there is a definition for the name of the file to write the JSON.  
+
+`// If there is a valid filename, then the app will stream JSON to this file
+var logFile = null;  // "./log.txt";`
+
+Edit this variable declaration according to:
+
+| Value for logFile            | Description                                                  |
+| ---------------------------- | ------------------------------------------------------------ |
+| null, *or* "" (empty string) | Disable logging of raw JSON                                  |
+| "./logfile.txt"              | Enable logging to file in application's directory, named "logfile.txt" |
+
 
 

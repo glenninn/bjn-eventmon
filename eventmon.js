@@ -1,5 +1,14 @@
 var auth = require("./auth.js");
-const version = "1.2.0";
+var fs = require("fs");
+var fd = null;
+
+
+const version = "1.3.0";  // add option to log Events JSON to file
+
+// If there is a valid filename, then the app will stream JSON to this file
+var logFile = null;  // "./log.txt";
+
+
 
 // --------------------------------------------------------------
 // ------------ Handle Command Line Interactions ----------------
@@ -199,6 +208,7 @@ var handler =
 
         var self = this;
         var eventJson = JSON.parse(eventData.body);
+		fd.write( JSON.stringify(eventJson,null,2) );
         var eventType = eventJson.event;
 
         // console.log("+++ HANDLER " + eventType + ": " + JSON.stringify(eventJson));
@@ -383,6 +393,32 @@ var arec = {
 };
 
 
+
+async function openLog(fn){
+	if(!fn || fn=="") {
+		fd = null;
+		return;
+	}
+	
+	console.log(`Opening log file: ${fn}`);
+	try{
+	 fd = fs.createWriteStream(fn,{flags:"a+"} );
+ 	 console.log( "File " + (fd ? `Opened (${fd})` : "Open Error!") );
+	}
+	catch(exc){
+		console.log("Exception: " + exc);
+		process.exit();
+	}
+	
+}
+
+function closeLog(){
+	if(fd)
+		fd.end();
+}
+
+openLog(logFile);
+
 auth.post( apiHost, aggregator,arec).then(function(results){
 	conClrScrn();
 	
@@ -432,6 +468,7 @@ function kp() {
 			case 'c':
 				if (key.ctrl) {
 					conGoto(24,1,conEraEOL + "***done***");
+					closeLog();
 					process.exit();
 				}
 				break;
